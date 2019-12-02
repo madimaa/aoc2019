@@ -2,9 +2,13 @@ package aoc2019
 
 import (
 	"bufio"
+	"fmt"
 	"log"
 	"os"
+	"time"
 )
+
+var timeNano int64
 
 //LogOnError - check and log the error
 func LogOnError(e error) {
@@ -35,4 +39,14 @@ func OpenFile(path string) []string {
 	LogOnError(file.Close())
 
 	return fileContent
+}
+
+//Start - set the start timer
+func Start() {
+	timeNano = time.Now().UnixNano()
+}
+
+//Elapsed - printf the elapsed time from Start
+func Elapsed() {
+	fmt.Printf("Runtime: %f\n", float64(time.Now().UnixNano()-timeNano)/float64(time.Second))
 }
