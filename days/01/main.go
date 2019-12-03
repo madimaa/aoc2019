@@ -5,7 +5,7 @@ import (
 	"os"
 	"strconv"
 
-	util "github.com/madimaa/aoc2019"
+	util "github.com/madimaa/aoc2019/lib"
 )
 
 func main() {
