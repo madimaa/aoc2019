@@ -12,20 +12,30 @@ import (
 func main() {
 	fmt.Println("Part 1")
 	util.Start()
-	result := util.OpenFile("03.txt")
-	firstWire := strings.Split(result[0], ",")
-	secondWire := strings.Split(result[1], ",")
-	//firstWire := strings.Split("R98,U47,R26,D63,R33,U87,L62,D20,R33,U53,R51", ",")
-	//secondWire := strings.Split("U98,R91,D20,R16,D67,R40,U7,R15,U6,R7", ",")
+	//result := util.OpenFile("03.txt")
+	//firstWire := strings.Split(result[0], ",")
+	//secondWire := strings.Split(result[1], ",")
+	firstWire := strings.Split("R98,U47,R26,D63,R33,U87,L62,D20,R33,U53,R51", ",")
+	secondWire := strings.Split("U98,R91,D20,R16,D67,R40,U7,R15,U6,R7", ",")
 
-	size := 50000
-	panel := util.CreateArray2D(size, size)
+	size := 1000
 	var centralX, centralY int = size / 2, size / 2
-	panel.PutArray2D(centralX, centralY, "o")
 
 	cross := make(map[int]int)
-	drawCable(centralX, centralY, *panel, firstWire, "1", cross)
-	drawCable(centralX, centralY, *panel, secondWire, "2", cross)
+	firstMap := drawCable(centralX, centralY, firstWire, "1")
+	secondMap := drawCable(centralX, centralY, secondWire, "2")
+
+	for k, v := range firstMap {
+		secondVals := secondMap[k]
+		if secondVals != nil {
+			for _, val := range v {
+				if contains(secondVals, val) {
+					cross[k] = val
+				}
+			}
+		}
+	}
+
 	// for i := 0; i < 30; i++ {
 	// 	for j := 0; j < 30; j++ {
 	// 		if panel.GetArray2D(j, i) == "" {
@@ -50,48 +60,60 @@ func main() {
 	fmt.Println("Part 2")
 }
 
-func drawCable(centralX, centralY int, panel util.Array2D, wire []string, wireNumber string, cross map[int]int) {
+func drawCable(centralX, centralY int, wire []string, wireNumber string) map[int][]int {
 	var posX, posY int = centralX, centralY
+	fmt.Println(posX, posY)
+	result := make(map[int][]int)
 	for _, s := range wire {
 		length, err := strconv.Atoi(s[1:len(s)])
 		util.LogOnError(err)
-		posX, posY = draw(panel, posX, posY, length, s[0], wireNumber, cross)
+		posX, posY = draw(result, posX, posY, length, s[0], wireNumber)
 	}
+
+	return result
 }
 
-func draw(panel util.Array2D, startX, startY, length int, direction byte, wireNumber string, cross map[int]int) (int, int) {
+func draw(output map[int][]int, startX, startY, length int, direction byte, wireNumber string) (int, int) {
 	switch direction {
 	case 'U':
 		for i := 1; i <= length; i++ {
 			startY++
-			setPanel(panel, startX, startY, wireNumber, cross)
+			setMap(output, startX, startY)
 		}
 	case 'R':
 		for i := 1; i <= length; i++ {
 			startX++
-			setPanel(panel, startX, startY, wireNumber, cross)
+			setMap(output, startX, startY)
 		}
 	case 'D':
 		for i := 1; i <= length; i++ {
 			startY--
-			setPanel(panel, startX, startY, wireNumber, cross)
+			setMap(output, startX, startY)
 		}
 	case 'L':
 		for i := 1; i <= length; i++ {
 			startX--
-			setPanel(panel, startX, startY, wireNumber, cross)
+			setMap(output, startX, startY)
 		}
 	}
 
 	return startX, startY
 }
 
-func setPanel(panel util.Array2D, x, y int, wireNumber string, cross map[int]int) {
-	content := panel.GetArray2D(x, y)
-	if content == "" || content == wireNumber {
-		panel.PutArray2D(x, y, wireNumber)
-	} else {
-		cross[x] = y
-		panel.PutArray2D(x, y, "X")
+func setMap(output map[int][]int, x, y int) {
+	if output[x] == nil {
+		output[x] = make([]int, 0)
 	}
+
+	output[x] = append(output[x], y)
+}
+
+func contains(slice []int, val int) bool {
+	for _, item := range slice {
+		if item == val {
+			return true
+		}
+	}
+
+	return false
 }
