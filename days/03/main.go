@@ -36,17 +36,6 @@ func main() {
 		}
 	}
 
-	// for i := 0; i < 30; i++ {
-	// 	for j := 0; j < 30; j++ {
-	// 		if panel.GetArray2D(j, i) == "" {
-	// 			fmt.Printf(".")
-	// 		} else {
-	// 			fmt.Printf(panel.GetArray2D(j, i))
-	// 		}
-	// 	}
-	// 	fmt.Println()
-	// }
-	// os.Exit(1)
 	var distance float64 = 0
 	for k, v := range cross {
 		manhattan := math.Abs(float64(centralX-k)) + math.Abs(float64(centralY-v))
