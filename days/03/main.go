@@ -22,8 +22,8 @@ func main() {
 	var centralX, centralY int = size / 2, size / 2
 
 	cross := make(map[int]int)
-	firstMap := drawCable(centralX, centralY, firstWire, "1")
-	secondMap := drawCable(centralX, centralY, secondWire, "2")
+	firstMap := drawCable(centralX, centralY, firstWire)
+	secondMap := drawCable(centralX, centralY, secondWire)
 
 	for k, v := range firstMap {
 		secondVals := secondMap[k]
@@ -60,20 +60,20 @@ func main() {
 	fmt.Println("Part 2")
 }
 
-func drawCable(centralX, centralY int, wire []string, wireNumber string) map[int][]int {
+func drawCable(centralX, centralY int, wire []string) map[int][]int {
 	var posX, posY int = centralX, centralY
 	fmt.Println(posX, posY)
 	result := make(map[int][]int)
 	for _, s := range wire {
 		length, err := strconv.Atoi(s[1:len(s)])
 		util.LogOnError(err)
-		posX, posY = draw(result, posX, posY, length, s[0], wireNumber)
+		posX, posY = draw(result, posX, posY, length, s[0])
 	}
 
 	return result
 }
 
-func draw(output map[int][]int, startX, startY, length int, direction byte, wireNumber string) (int, int) {
+func draw(output map[int][]int, startX, startY, length int, direction byte) (int, int) {
 	switch direction {
 	case 'U':
 		for i := 1; i <= length; i++ {
