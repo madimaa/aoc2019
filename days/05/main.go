@@ -12,6 +12,7 @@ import (
 
 func main() {
 	fmt.Println("Part 1")
+	fmt.Println("Input = 1")
 	util.Start()
 	result := util.OpenFile("05.txt")
 	content := strings.Split(result[0], ",")
@@ -24,6 +25,12 @@ func main() {
 		intcode[i] = number
 	}
 
+	fmt.Println(computer(intcode))
+	util.Elapsed()
+
+	fmt.Println("Part 2")
+	fmt.Println("Input = 5")
+	util.Start()
 	fmt.Println(computer(intcode))
 	util.Elapsed()
 }
@@ -66,6 +73,23 @@ func computer(input []int) int {
 		} else if opCode == 4 {
 			fmt.Println(getValue(intcode, i+1, getDigit(num, 2)))
 			i += 2
+		} else if opCode == 5 || opCode == 6 {
+			firstParam := getValue(intcode, i+1, getDigit(num, 2))
+			if opCode == 5 && firstParam > 0 || opCode == 6 && firstParam == 0 {
+				i = getValue(intcode, i+2, getDigit(num, 3))
+			} else {
+				i += 3
+			}
+		} else if opCode == 7 || opCode == 8 {
+			firstParam := getValue(intcode, i+1, getDigit(num, 2))
+			secondParam := getValue(intcode, i+2, getDigit(num, 3))
+			if opCode == 7 && firstParam < secondParam || opCode == 8 && firstParam == secondParam {
+				putValue(intcode, i+3, getDigit(num, 4), 1)
+			} else {
+				putValue(intcode, i+3, getDigit(num, 4), 0)
+			}
+
+			i += 4
 		}
 	}
 
