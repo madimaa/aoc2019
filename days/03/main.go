@@ -29,7 +29,7 @@ func main() {
 		secondVals := secondMap[k]
 		if secondVals != nil {
 			for _, val := range v {
-				if contains(secondVals, val) {
+				if util.ContainsInt(secondVals, val) {
 					cross[k] = val
 				}
 			}
@@ -164,14 +164,4 @@ func checkCrossing(result, cross map[int]int, x, y, size, distance, i int) {
 	if cross[x] == y {
 		result[x*size+y] = distance + i
 	}
-}
-
-func contains(slice []int, val int) bool {
-	for _, item := range slice {
-		if item == val {
-			return true
-		}
-	}
-
-	return false
 }
