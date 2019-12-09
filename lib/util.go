@@ -50,3 +50,25 @@ func Start() {
 func Elapsed() {
 	fmt.Printf("Runtime: %f\n", float64(time.Now().UnixNano()-timeNano)/float64(time.Second))
 }
+
+//ContainsInt - returns true if val exists in slice
+func ContainsInt(slice []int, val int) bool {
+	for _, item := range slice {
+		if val == item {
+			return true
+		}
+	}
+
+	return false
+}
+
+//ContainsStr - returns true if val exists in slice
+func ContainsStr(slice []string, val string) bool {
+	for _, item := range slice {
+		if val == item {
+			return true
+		}
+	}
+
+	return false
+}
