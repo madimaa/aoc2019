@@ -11,33 +11,25 @@ import (
 
 //Computer - intcode computer
 type Computer struct {
-	intcode       []int
-	standardInput bool
-	input         int
+	intcode []int
+	input   []int
 }
 
 //CreateComputer - creats an intcode computer
-func CreateComputer(intcode []int, standardInput bool, input int) *Computer {
+func CreateComputer(intcode []int) *Computer {
 	intcodeCopy := make([]int, len(intcode))
 	copy(intcodeCopy, intcode)
-	return &Computer{intcode: intcodeCopy, standardInput: standardInput, input: input}
+	return &Computer{intcode: intcodeCopy, input: make([]int, 0)}
 }
 
-//OverrideInputMode - overrides input mode
-func (computer *Computer) OverrideInputMode(standardInput bool) {
-	computer.standardInput = standardInput
-}
-
-//ChangeInput - changes input - use it with OverrideInputMode(false)
-func (computer *Computer) ChangeInput(input int) {
-	computer.input = input
+//AddInput - add input to fifo
+func (computer *Computer) AddInput(input int) {
+	computer.input = append(computer.input, input)
 }
 
 //ComputerWithInput - add noun and verb
-func (computer *Computer) ComputerWithInput(input []int, noun, verb int) int {
+func (computer *Computer) ComputerWithInput(noun, verb int) int {
 	//making a copy of the slice will prevent modifying the `background array`
-	intcode := make([]int, len(input))
-	copy(intcode, input)
 	computer.intcode[1] = noun
 	computer.intcode[2] = verb
 	return computer.Computer()
@@ -72,17 +64,19 @@ func (computer *Computer) Computer() int {
 			putValue(intcode, i+3, getDigit(num, 4), result)
 			i += 4
 		} else if opCode == 3 {
-			if computer.standardInput {
+			var num int
+			if len(computer.input) == 0 {
 				reader := bufio.NewReader(os.Stdin)
 				text, _, err := reader.ReadLine()
 				util.LogOnError(err)
-				num, err := strconv.Atoi(string(text))
+				num, err = strconv.Atoi(string(text))
 				util.PanicOnError(err)
-				putValue(intcode, i+1, getDigit(num, 2), num)
 			} else {
-				putValue(intcode, i+1, getDigit(computer.input, 2), computer.input)
+				num = computer.input[0]
+				computer.input = computer.input[1:]
 			}
 
+			putValue(intcode, i+1, getDigit(num, 2), num)
 			i += 2
 		} else if opCode == 4 {
 			fmt.Println(getValue(intcode, i+1, getDigit(num, 2)))
