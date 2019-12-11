@@ -2,7 +2,6 @@ package intcode
 
 import (
 	"bufio"
-	"fmt"
 	"os"
 	"strconv"
 
@@ -28,7 +27,7 @@ func (computer *Computer) AddInput(input int) {
 }
 
 //ComputerWithInput - add noun and verb
-func (computer *Computer) ComputerWithInput(noun, verb int) int {
+func (computer *Computer) ComputerWithInput(noun, verb int) (int, int) {
 	//making a copy of the slice will prevent modifying the `background array`
 	computer.intcode[1] = noun
 	computer.intcode[2] = verb
@@ -36,11 +35,12 @@ func (computer *Computer) ComputerWithInput(noun, verb int) int {
 }
 
 //Computer - intcode computer
-func (computer *Computer) Computer() int {
+func (computer *Computer) Computer() (int, int) {
 	//making a copy of the slice will prevent modifying the `background array`
 	intcode := make([]int, len(computer.intcode))
 	copy(intcode, computer.intcode)
 
+	output := 0
 	for i := 0; i < len(intcode); {
 		num := intcode[i]
 		opCode := getOpCode(num)
@@ -79,7 +79,7 @@ func (computer *Computer) Computer() int {
 			putValue(intcode, i+1, getDigit(num, 2), num)
 			i += 2
 		} else if opCode == 4 {
-			fmt.Println(getValue(intcode, i+1, getDigit(num, 2)))
+			output = getValue(intcode, i+1, getDigit(num, 2))
 			i += 2
 		} else if opCode == 5 || opCode == 6 {
 			firstParam := getValue(intcode, i+1, getDigit(num, 2))
@@ -101,7 +101,7 @@ func (computer *Computer) Computer() int {
 		}
 	}
 
-	return intcode[0]
+	return intcode[0], output
 }
 
 func getOpCode(input int) int {
