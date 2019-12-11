@@ -25,7 +25,8 @@ func main() {
 	}
 
 	computer := intcode.CreateComputer(intcodeArr)
-
+	computer.AddInput(1)
+	computer.AddInput(5)
 	fmt.Println(computer.Computer())
 	util.Elapsed()
 
