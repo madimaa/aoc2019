@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	util "github.com/madimaa/aoc2019/lib"
+	"github.com/madimaa/aoc2019/lib/intcode"
 )
 
 func main() {
@@ -18,20 +19,22 @@ func main() {
 	content := strings.Split(result[0], ",")
 	// result := "1002,4,3,4,33"
 	// content := strings.Split(result, ",")
-	intcode := make([]int, len(content))
+	intcodeArr := make([]int, len(content))
 	for i, s := range content {
 		number, err := strconv.Atoi(s)
 		util.LogOnError(err)
-		intcode[i] = number
+		intcodeArr[i] = number
 	}
 
-	fmt.Println(computer(intcode))
+	computer := intcode.CreateComputer(intcodeArr, true, 0)
+
+	fmt.Println(computer.Computer())
 	util.Elapsed()
 
 	fmt.Println("Part 2")
 	fmt.Println("Input = 5")
 	util.Start()
-	fmt.Println(computer(intcode))
+	fmt.Println(computer.Computer())
 	util.Elapsed()
 }
 

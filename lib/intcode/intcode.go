@@ -9,21 +9,45 @@ import (
 	util "github.com/madimaa/aoc2019/lib"
 )
 
+//Computer - intcode computer
+type Computer struct {
+	intcode       []int
+	standardInput bool
+	input         int
+}
+
+//CreateComputer - creats an intcode computer
+func CreateComputer(intcode []int, standardInput bool, input int) *Computer {
+	intcodeCopy := make([]int, len(intcode))
+	copy(intcodeCopy, intcode)
+	return &Computer{intcode: intcodeCopy, standardInput: standardInput, input: input}
+}
+
+//OverrideInputMode - overrides input mode
+func (computer *Computer) OverrideInputMode(standardInput bool) {
+	computer.standardInput = standardInput
+}
+
+//ChangeInput - changes input - use it with OverrideInputMode(false)
+func (computer *Computer) ChangeInput(input int) {
+	computer.input = input
+}
+
 //ComputerWithInput - add noun and verb
-func ComputerWithInput(input []int, noun, verb int) int {
+func (computer *Computer) ComputerWithInput(input []int, noun, verb int) int {
 	//making a copy of the slice will prevent modifying the `background array`
 	intcode := make([]int, len(input))
 	copy(intcode, input)
-	intcode[1] = noun
-	intcode[2] = verb
-	return Computer(intcode)
+	computer.intcode[1] = noun
+	computer.intcode[2] = verb
+	return computer.Computer()
 }
 
 //Computer - intcode computer
-func Computer(input []int) int {
+func (computer *Computer) Computer() int {
 	//making a copy of the slice will prevent modifying the `background array`
-	intcode := make([]int, len(input))
-	copy(intcode, input)
+	intcode := make([]int, len(computer.intcode))
+	copy(intcode, computer.intcode)
 
 	for i := 0; i < len(intcode); {
 		num := intcode[i]
@@ -48,12 +72,17 @@ func Computer(input []int) int {
 			putValue(intcode, i+3, getDigit(num, 4), result)
 			i += 4
 		} else if opCode == 3 {
-			reader := bufio.NewReader(os.Stdin)
-			text, _, err := reader.ReadLine()
-			util.LogOnError(err)
-			num, err := strconv.Atoi(string(text))
-			util.PanicOnError(err)
-			putValue(intcode, i+1, getDigit(num, 2), num)
+			if computer.standardInput {
+				reader := bufio.NewReader(os.Stdin)
+				text, _, err := reader.ReadLine()
+				util.LogOnError(err)
+				num, err := strconv.Atoi(string(text))
+				util.PanicOnError(err)
+				putValue(intcode, i+1, getDigit(num, 2), num)
+			} else {
+				putValue(intcode, i+1, getDigit(computer.input, 2), computer.input)
+			}
+
 			i += 2
 		} else if opCode == 4 {
 			fmt.Println(getValue(intcode, i+1, getDigit(num, 2)))
