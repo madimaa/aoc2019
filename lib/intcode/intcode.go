@@ -2,6 +2,7 @@ package intcode
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 	"strconv"
 
@@ -21,6 +22,11 @@ func CreateComputer(intcode []int) *Computer {
 	return &Computer{intcode: intcodeCopy, input: make([]int, 0)}
 }
 
+//Print - prints the intcode array
+func (computer *Computer) Print() {
+	fmt.Println(computer.intcode)
+}
+
 //AddInput - add input to fifo
 func (computer *Computer) AddInput(input int) {
 	computer.input = append(computer.input, input)
@@ -37,12 +43,12 @@ func (computer *Computer) ComputerWithInput(noun, verb int) (int, int) {
 //Computer - intcode computer
 func (computer *Computer) Computer() (int, int) {
 	//making a copy of the slice will prevent modifying the `background array`
-	intcode := make([]int, len(computer.intcode))
-	copy(intcode, computer.intcode)
+	//intcode := make([]int, len(computer.intcode))
+	//copy(intcode, computer.intcode)
 
 	output := 0
-	for i := 0; i < len(intcode); {
-		num := intcode[i]
+	for i := 0; i < len(computer.intcode); {
+		num := computer.intcode[i]
 		opCode := getOpCode(num)
 		//fmt.Println(opCode)
 		if opCode == 99 {
@@ -52,8 +58,8 @@ func (computer *Computer) Computer() (int, int) {
 		if opCode == 1 || opCode == 2 {
 			//fmt.Println(getDigit(num, 2))
 			//fmt.Println(getDigit(num, 3))
-			noun := getValue(intcode, i+1, getDigit(num, 2))
-			verb := getValue(intcode, i+2, getDigit(num, 3))
+			noun := getValue(computer.intcode, i+1, getDigit(num, 2))
+			verb := getValue(computer.intcode, i+2, getDigit(num, 3))
 			result := 0
 			if opCode == 1 {
 				result = noun + verb
@@ -61,47 +67,47 @@ func (computer *Computer) Computer() (int, int) {
 				result = noun * verb
 			}
 
-			putValue(intcode, i+3, getDigit(num, 4), result)
+			putValue(computer.intcode, i+3, getDigit(num, 4), result)
 			i += 4
 		} else if opCode == 3 {
-			var num int
+			var number int
 			if len(computer.input) == 0 {
 				reader := bufio.NewReader(os.Stdin)
 				text, _, err := reader.ReadLine()
 				util.LogOnError(err)
-				num, err = strconv.Atoi(string(text))
+				number, err = strconv.Atoi(string(text))
 				util.PanicOnError(err)
 			} else {
-				num = computer.input[0]
+				number = computer.input[0]
 				computer.input = computer.input[1:]
 			}
 
-			putValue(intcode, i+1, getDigit(num, 2), num)
+			putValue(computer.intcode, i+1, getDigit(num, 2), number)
 			i += 2
 		} else if opCode == 4 {
-			output = getValue(intcode, i+1, getDigit(num, 2))
+			output = getValue(computer.intcode, i+1, getDigit(num, 2))
 			i += 2
 		} else if opCode == 5 || opCode == 6 {
-			firstParam := getValue(intcode, i+1, getDigit(num, 2))
+			firstParam := getValue(computer.intcode, i+1, getDigit(num, 2))
 			if opCode == 5 && firstParam > 0 || opCode == 6 && firstParam == 0 {
-				i = getValue(intcode, i+2, getDigit(num, 3))
+				i = getValue(computer.intcode, i+2, getDigit(num, 3))
 			} else {
 				i += 3
 			}
 		} else if opCode == 7 || opCode == 8 {
-			firstParam := getValue(intcode, i+1, getDigit(num, 2))
-			secondParam := getValue(intcode, i+2, getDigit(num, 3))
+			firstParam := getValue(computer.intcode, i+1, getDigit(num, 2))
+			secondParam := getValue(computer.intcode, i+2, getDigit(num, 3))
 			if opCode == 7 && firstParam < secondParam || opCode == 8 && firstParam == secondParam {
-				putValue(intcode, i+3, getDigit(num, 4), 1)
+				putValue(computer.intcode, i+3, getDigit(num, 4), 1)
 			} else {
-				putValue(intcode, i+3, getDigit(num, 4), 0)
+				putValue(computer.intcode, i+3, getDigit(num, 4), 0)
 			}
 
 			i += 4
 		}
 	}
 
-	return intcode[0], output
+	return computer.intcode[0], output
 }
 
 func getOpCode(input int) int {
