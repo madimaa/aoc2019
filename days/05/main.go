@@ -26,13 +26,14 @@ func main() {
 
 	computer := intcode.CreateComputer(intcodeArr)
 	computer.AddInput(1)
-	computer.AddInput(5)
 	fmt.Println(computer.Computer())
 	util.Elapsed()
 
 	fmt.Println("Part 2")
 	fmt.Println("Input = 5")
 	util.Start()
+	computer = intcode.CreateComputer(intcodeArr)
+	computer.AddInput(5)
 	fmt.Println(computer.Computer())
 	util.Elapsed()
 }
