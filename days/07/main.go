@@ -30,30 +30,11 @@ func main() {
 	permutations := prmt.New(prmt.IntSlice(elements))
 	for permutations.Next() {
 		a, b, c, d, e := elements[0], elements[1], elements[2], elements[3], elements[4]
-		computer := intcode.CreateComputer(intcodeArr)
-		computer.AddInput(a)
-		computer.AddInput(0)
-		_, aOut := computer.Computer()
-
-		computer = intcode.CreateComputer(intcodeArr)
-		computer.AddInput(b)
-		computer.AddInput(aOut)
-		_, bOut := computer.Computer()
-
-		computer = intcode.CreateComputer(intcodeArr)
-		computer.AddInput(c)
-		computer.AddInput(bOut)
-		_, cOut := computer.Computer()
-
-		computer = intcode.CreateComputer(intcodeArr)
-		computer.AddInput(d)
-		computer.AddInput(cOut)
-		_, dOut := computer.Computer()
-
-		computer = intcode.CreateComputer(intcodeArr)
-		computer.AddInput(e)
-		computer.AddInput(dOut)
-		_, out := computer.Computer()
+		aOut := compute(intcodeArr, a, 0)
+		bOut := compute(intcodeArr, b, aOut)
+		cOut := compute(intcodeArr, c, bOut)
+		dOut := compute(intcodeArr, d, cOut)
+		out := compute(intcodeArr, e, dOut)
 
 		if maxOutput < out {
 			maxOutput = out
@@ -62,4 +43,12 @@ func main() {
 
 	fmt.Println(maxOutput)
 	util.Elapsed()
+}
+
+func compute(intcodeArr []int, phaseSettings, input int) int {
+	computer := intcode.CreateComputer(intcodeArr)
+	computer.AddInput(phaseSettings)
+	computer.AddInput(input)
+	_, output := computer.Computer()
+	return output
 }
