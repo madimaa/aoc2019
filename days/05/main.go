@@ -26,7 +26,13 @@ func main() {
 
 	computer := intcode.CreateComputer(intcodeArr)
 	computer.AddInput(1)
-	fmt.Println(computer.Computer())
+	var output int
+	_, output, _ = computer.Computer()
+	//fix after output break in day 07 part 2
+	for output == 0 {
+		_, output, _ = computer.Computer()
+	}
+	fmt.Println(output)
 	util.Elapsed()
 
 	fmt.Println("Part 2")
