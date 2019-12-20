@@ -18,6 +18,7 @@ type Computer struct {
 
 //CreateComputer - creats an intcode computer
 func CreateComputer(intcode []int) *Computer {
+	//making a copy of the slice will prevent modifying the `background array`
 	intcodeCopy := make([]int, len(intcode))
 	copy(intcodeCopy, intcode)
 	return &Computer{intcode: intcodeCopy, input: make([]int, 0), index: 0}
@@ -35,7 +36,6 @@ func (computer *Computer) AddInput(input int) {
 
 //ComputerWithInput - add noun and verb
 func (computer *Computer) ComputerWithInput(noun, verb int) (int, int, bool) {
-	//making a copy of the slice will prevent modifying the `background array`
 	computer.intcode[1] = noun
 	computer.intcode[2] = verb
 	return computer.Computer()
@@ -43,10 +43,6 @@ func (computer *Computer) ComputerWithInput(noun, verb int) (int, int, bool) {
 
 //Computer - intcode computer
 func (computer *Computer) Computer() (int, int, bool) {
-	//making a copy of the slice will prevent modifying the `background array`
-	//intcode := make([]int, len(computer.intcode))
-	//copy(intcode, computer.intcode)
-
 	halt := false
 	output := 0
 	for computer.index < len(computer.intcode) {
@@ -60,8 +56,6 @@ func (computer *Computer) Computer() (int, int, bool) {
 		}
 
 		if opCode == 1 || opCode == 2 {
-			//fmt.Println(getDigit(num, 2))
-			//fmt.Println(getDigit(num, 3))
 			noun := getValue(computer.intcode, i+1, getDigit(num, 2))
 			verb := getValue(computer.intcode, i+2, getDigit(num, 3))
 			result := 0
