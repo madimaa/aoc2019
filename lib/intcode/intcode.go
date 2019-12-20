@@ -13,13 +13,14 @@ import (
 type Computer struct {
 	intcode []int
 	input   []int
+	index   int
 }
 
 //CreateComputer - creats an intcode computer
 func CreateComputer(intcode []int) *Computer {
 	intcodeCopy := make([]int, len(intcode))
 	copy(intcodeCopy, intcode)
-	return &Computer{intcode: intcodeCopy, input: make([]int, 0)}
+	return &Computer{intcode: intcodeCopy, input: make([]int, 0), index: 0}
 }
 
 //Print - prints the intcode array
@@ -33,7 +34,7 @@ func (computer *Computer) AddInput(input int) {
 }
 
 //ComputerWithInput - add noun and verb
-func (computer *Computer) ComputerWithInput(noun, verb int) (int, int) {
+func (computer *Computer) ComputerWithInput(noun, verb int) (int, int, bool) {
 	//making a copy of the slice will prevent modifying the `background array`
 	computer.intcode[1] = noun
 	computer.intcode[2] = verb
@@ -41,17 +42,20 @@ func (computer *Computer) ComputerWithInput(noun, verb int) (int, int) {
 }
 
 //Computer - intcode computer
-func (computer *Computer) Computer() (int, int) {
+func (computer *Computer) Computer() (int, int, bool) {
 	//making a copy of the slice will prevent modifying the `background array`
 	//intcode := make([]int, len(computer.intcode))
 	//copy(intcode, computer.intcode)
 
+	halt := false
 	output := 0
-	for i := 0; i < len(computer.intcode); {
+	for computer.index < len(computer.intcode) {
+		i := computer.index
 		num := computer.intcode[i]
 		opCode := getOpCode(num)
 		//fmt.Println(opCode)
 		if opCode == 99 {
+			halt = true
 			break
 		}
 
@@ -68,10 +72,11 @@ func (computer *Computer) Computer() (int, int) {
 			}
 
 			putValue(computer.intcode, i+3, getDigit(num, 4), result)
-			i += 4
+			computer.index += 4
 		} else if opCode == 3 {
 			var number int
 			if len(computer.input) == 0 {
+				fmt.Println(output)
 				reader := bufio.NewReader(os.Stdin)
 				text, _, err := reader.ReadLine()
 				util.LogOnError(err)
@@ -83,16 +88,17 @@ func (computer *Computer) Computer() (int, int) {
 			}
 
 			putValue(computer.intcode, i+1, getDigit(num, 2), number)
-			i += 2
+			computer.index += 2
 		} else if opCode == 4 {
 			output = getValue(computer.intcode, i+1, getDigit(num, 2))
-			i += 2
+			computer.index += 2
+			break
 		} else if opCode == 5 || opCode == 6 {
 			firstParam := getValue(computer.intcode, i+1, getDigit(num, 2))
 			if opCode == 5 && firstParam > 0 || opCode == 6 && firstParam == 0 {
-				i = getValue(computer.intcode, i+2, getDigit(num, 3))
+				computer.index = getValue(computer.intcode, i+2, getDigit(num, 3))
 			} else {
-				i += 3
+				computer.index += 3
 			}
 		} else if opCode == 7 || opCode == 8 {
 			firstParam := getValue(computer.intcode, i+1, getDigit(num, 2))
@@ -103,11 +109,11 @@ func (computer *Computer) Computer() (int, int) {
 				putValue(computer.intcode, i+3, getDigit(num, 4), 0)
 			}
 
-			i += 4
+			computer.index += 4
 		}
 	}
 
-	return computer.intcode[0], output
+	return computer.intcode[0], output, halt
 }
 
 func getOpCode(input int) int {
