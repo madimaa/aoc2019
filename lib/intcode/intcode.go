@@ -11,9 +11,10 @@ import (
 
 //Computer - intcode computer
 type Computer struct {
-	intcode []int
-	input   []int
-	index   int
+	intcode      []int
+	input        []int
+	index        int
+	relativeBase int
 }
 
 //CreateComputer - creats an intcode computer
@@ -21,7 +22,7 @@ func CreateComputer(intcode []int) *Computer {
 	//making a copy of the slice will prevent modifying the `background array`
 	intcodeCopy := make([]int, len(intcode))
 	copy(intcodeCopy, intcode)
-	return &Computer{intcode: intcodeCopy, input: make([]int, 0), index: 0}
+	return &Computer{intcode: intcodeCopy, input: make([]int, 0), index: 0, relativeBase: 0}
 }
 
 //Print - prints the intcode array
@@ -56,8 +57,8 @@ func (computer *Computer) Computer() (int, int, bool) {
 		}
 
 		if opCode == 1 || opCode == 2 {
-			noun := getValue(computer.intcode, i+1, getDigit(num, 2))
-			verb := getValue(computer.intcode, i+2, getDigit(num, 3))
+			noun := getValue(computer.intcode, i+1, getDigit(num, 2), computer.relativeBase)
+			verb := getValue(computer.intcode, i+2, getDigit(num, 3), computer.relativeBase)
 			result := 0
 			if opCode == 1 {
 				result = noun + verb
@@ -65,7 +66,7 @@ func (computer *Computer) Computer() (int, int, bool) {
 				result = noun * verb
 			}
 
-			putValue(computer.intcode, i+3, getDigit(num, 4), result)
+			putValue(computer.intcode, i+3, getDigit(num, 4), result, computer.relativeBase)
 			computer.index += 4
 		} else if opCode == 3 {
 			var number int
@@ -81,29 +82,44 @@ func (computer *Computer) Computer() (int, int, bool) {
 				computer.input = computer.input[1:]
 			}
 
-			putValue(computer.intcode, i+1, getDigit(num, 2), number)
+			putValue(computer.intcode, i+1, getDigit(num, 2), number, computer.relativeBase)
 			computer.index += 2
 		} else if opCode == 4 {
-			output = getValue(computer.intcode, i+1, getDigit(num, 2))
+			output = getValue(computer.intcode, i+1, getDigit(num, 2), computer.relativeBase)
 			computer.index += 2
 			break
 		} else if opCode == 5 || opCode == 6 {
-			firstParam := getValue(computer.intcode, i+1, getDigit(num, 2))
+			firstParam := getValue(computer.intcode, i+1, getDigit(num, 2), computer.relativeBase)
 			if opCode == 5 && firstParam > 0 || opCode == 6 && firstParam == 0 {
-				computer.index = getValue(computer.intcode, i+2, getDigit(num, 3))
+				computer.index = getValue(computer.intcode, i+2, getDigit(num, 3), computer.relativeBase)
 			} else {
 				computer.index += 3
 			}
 		} else if opCode == 7 || opCode == 8 {
-			firstParam := getValue(computer.intcode, i+1, getDigit(num, 2))
-			secondParam := getValue(computer.intcode, i+2, getDigit(num, 3))
+			firstParam := getValue(computer.intcode, i+1, getDigit(num, 2), computer.relativeBase)
+			secondParam := getValue(computer.intcode, i+2, getDigit(num, 3), computer.relativeBase)
 			if opCode == 7 && firstParam < secondParam || opCode == 8 && firstParam == secondParam {
-				putValue(computer.intcode, i+3, getDigit(num, 4), 1)
+				putValue(computer.intcode, i+3, getDigit(num, 4), 1, computer.relativeBase)
 			} else {
-				putValue(computer.intcode, i+3, getDigit(num, 4), 0)
+				putValue(computer.intcode, i+3, getDigit(num, 4), 0, computer.relativeBase)
 			}
 
 			computer.index += 4
+		} else if opCode == 9 {
+			valuePosition := 0
+			switch getDigit(num, 2) {
+			case 0: //position mode
+				valuePosition = computer.intcode[i+1]
+			case 1: //immediate mode
+				valuePosition = i + 1
+			case 2: //relative mode
+				valuePosition = computer.relativeBase + computer.intcode[i+1]
+			default:
+				panic("Something went wrong")
+			}
+
+			computer.relativeBase += computer.intcode[valuePosition]
+			computer.index += 2
 		}
 	}
 
@@ -139,23 +155,27 @@ func getDigits(input, from, to int) int {
 	}
 }
 
-func getValue(intcode []int, position, mode int) int {
+func getValue(intcode []int, position, mode, relativeBase int) int {
 	switch mode {
-	case 0:
+	case 0: //position mode
 		return intcode[intcode[position]]
-	case 1:
+	case 1: //immediate mode
 		return intcode[position]
+	case 2: //relative mode
+		return intcode[relativeBase+intcode[position]]
 	default:
 		panic("Something went wrong")
 	}
 }
 
-func putValue(intcode []int, position, mode, value int) {
+func putValue(intcode []int, position, mode, value, relativeBase int) {
 	switch mode {
-	case 0:
+	case 0: //position mode
 		intcode[intcode[position]] = value
-	case 1:
+	case 1: //immediate mode
 		intcode[position] = value
+	case 2: //relative mode
+		intcode[relativeBase+intcode[position]] = value
 	default:
 		panic("Something went wrong")
 	}
