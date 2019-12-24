@@ -1,5 +1,10 @@
 package array2d
 
+/*
+This solution is slower than [][]type on less than ~50k entries
+but significantly faster on 10m+ data
+*/
+
 //Array2D - 2 dimensional array
 type Array2D struct {
 	data []string
