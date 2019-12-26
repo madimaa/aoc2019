@@ -72,3 +72,14 @@ func ContainsStr(slice []string, val string) bool {
 
 	return false
 }
+
+//ContainsFloat - returns true if val exists in slice
+func ContainsFloat(slice []float64, val float64) bool {
+	for _, item := range slice {
+		if val == item {
+			return true
+		}
+	}
+
+	return false
+}
