@@ -26,3 +26,8 @@ func (a2d *Array2D) Put(x, y int, value string) {
 func (a2d *Array2D) Get(x, y int) string {
 	return a2d.data[x*a2d.y+y]
 }
+
+//GetSize - returns the size of X and size of Y
+func (a2d *Array2D) GetSize() (int, int) {
+	return a2d.x, a2d.y
+}
