@@ -83,3 +83,60 @@ func ContainsFloat(slice []float64, val float64) bool {
 
 	return false
 }
+
+//Lcm - Least common multiple
+func Lcm(ints ...int64) int64 {
+	actual := ints[0]
+	for i := 1; i < len(ints); i++ {
+		actual = lcm(actual, ints[i])
+	}
+
+	return actual
+}
+
+func lcm(ints ...int64) int64 {
+	var multiple int64 = 1
+	for _, item := range ints {
+		multiple *= item
+	}
+
+	return multiple / gcd(ints)
+}
+
+//Gcd - Greatest common divisor
+func Gcd(ints ...int64) int64 {
+	return gcd(ints)
+}
+
+func gcd(ints []int64) int64 {
+	smallest := smallestElement(ints)
+	var result, actual int64 = 1, 1
+	for smallest >= actual {
+		noRemainder := false
+		for _, item := range ints {
+			if item%actual != 0 {
+				noRemainder = true
+				break
+			}
+		}
+
+		if !noRemainder {
+			result = actual
+		}
+
+		actual++
+	}
+
+	return result
+}
+
+func smallestElement(ints []int64) int64 {
+	smallestElement := ints[0]
+	for _, item := range ints {
+		if smallestElement > item {
+			smallestElement = item
+		}
+	}
+
+	return smallestElement
+}
