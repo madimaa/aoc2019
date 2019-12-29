@@ -60,6 +60,8 @@ func main() {
 	*/
 	runComputer(0, intcodeArr) //first input. every panel is black
 
+	util.Elapsed()
+
 	fmt.Println("Part 2")
 	util.Start()
 
@@ -90,13 +92,11 @@ func main() {
 		}
 	}
 
-	file, err := os.Create("08.png")
+	file, err := os.Create("11.png")
 	util.PanicOnError(err)
 	png.Encode(file, img)
 
 	fmt.Println(len(painted))
-	util.Elapsed()
-
 	util.Elapsed()
 }
 
