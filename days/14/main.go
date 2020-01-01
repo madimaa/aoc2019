@@ -32,13 +32,11 @@ func (rcp *recipes) getQuantity(key string) int {
 	return rcp.quantity[key]
 }
 
-var ore int
-
 func main() {
 	fmt.Println("Part 1")
 	util.Start()
 
-	result := util.OpenFile("sample3.txt")
+	result := util.OpenFile("14.txt")
 	chemicals := initRecipes()
 	for _, item := range result {
 		split := strings.Split(item, "=>")
@@ -52,8 +50,50 @@ func main() {
 		chemicals.add(outputName, outputQuantity, ingredients)
 	}
 
-	calculateFuel(chemicals)
+	layers := orderByLevel(chemicals)
+
+	calculateFuel(chemicals, layers)
 	util.Elapsed()
+}
+
+func orderByLevel(chemicals recipes) map[string]int {
+	layers := make(map[string]int)
+
+	//0th layer is FUEL
+	layers["FUEL"] = 0
+	actualLayer := make([]string, 1)
+	actualLayer[0] = "FUEL"
+
+	nextLayer := make([]string, 0)
+	level := 1
+	for {
+		inputChemicals := chemicals.product[actualLayer[0]]
+		for _, item := range inputChemicals {
+			if v, ok := layers[item.name]; !ok || level > v {
+				layers[item.name] = level
+			}
+
+			if !util.ContainsStr(nextLayer, item.name) {
+				nextLayer = append(nextLayer, item.name)
+			}
+		}
+
+		//remove the first element
+		actualLayer = actualLayer[1:]
+
+		if len(nextLayer) == 0 && len(actualLayer) == 0 {
+			break
+		}
+
+		if len(actualLayer) == 0 {
+			actualLayer = make([]string, len(nextLayer))
+			copy(actualLayer, nextLayer)
+			nextLayer = make([]string, 0)
+			level++
+		}
+	}
+
+	return layers
 }
 
 func splitChemical(input string) (int, string) {
@@ -64,62 +104,52 @@ func splitChemical(input string) (int, string) {
 	return quantity, output[1]
 }
 
-func calculateFuel(chemicals recipes) {
+func calculateFuel(chemicals recipes, layers map[string]int) {
 	requiredChemicals := make(map[string]int)
 	inputChemicals := chemicals.product["FUEL"]
 	for _, item := range inputChemicals {
 		requiredChemicals[item.name] = item.quantity
 	}
 
-	calculateRequiredQuantities(chemicals, requiredChemicals)
+	ore := calculateRequiredQuantities(chemicals, requiredChemicals, layers)
 	fmt.Println(ore)
 }
 
-func calculateRequiredQuantities(chemicals recipes, required map[string]int) {
+func calculateRequiredQuantities(chemicals recipes, required map[string]int, layers map[string]int) int {
 	requiredChemicals := make(map[string]int)
-	for k, v := range required {
-		if _, ok := requiredChemicals[k]; ok {
-			requiredChemicals[k] += v
-			continue
-		}
 
-		if k == "ORE" {
-			if _, ok := requiredChemicals["ORE"]; ok {
-				requiredChemicals["ORE"] += v
-			} else {
-				requiredChemicals["ORE"] = v
-			}
-
-			continue
-		}
-
-		inputChemicals := chemicals.product[k]
-		for _, item := range inputChemicals {
-			quantity, name := item.quantity, item.name
-			value := int(math.Ceil(float64(v)/float64(chemicals.getQuantity(k))) * float64(quantity))
-			//value := int(math.Ceil(float64(v*quantity) / float64(chemicals.getQuantity(k))))
-			if _, ok := requiredChemicals[name]; ok {
-				requiredChemicals[name] += value
-			} else {
-				requiredChemicals[name] = value
-			}
-		}
-	}
-
-	_, ok := requiredChemicals["ORE"]
-	if len(requiredChemicals) > 1 || !ok {
-		for k, v := range requiredChemicals {
-			if k != "ORE" {
-				quantity := chemicals.getQuantity(k)
-				remaining := v % quantity
-				if remaining != 0 {
-					requiredChemicals[k] += quantity - remaining
+	hadElement := true
+	level := 0
+	for hadElement {
+		hadElement = false
+		for input, value := range layers {
+			if value == level && input != "ORE" {
+				requiredQuantity := 1
+				if _, ok := requiredChemicals[input]; ok {
+					requiredQuantity = requiredChemicals[input]
+					if requiredQuantity%chemicals.getQuantity(input) != 0 {
+						requiredQuantity += chemicals.getQuantity(input) - requiredQuantity%chemicals.getQuantity(input)
+					}
+					delete(requiredChemicals, input)
 				}
+
+				ingredients := chemicals.product[input]
+				outputQuantity := chemicals.getQuantity(input)
+				for _, item := range ingredients {
+					value := int(math.Ceil(float64(requiredQuantity)/float64(outputQuantity)) * float64(item.quantity))
+					if _, ok := requiredChemicals[item.name]; ok {
+						requiredChemicals[item.name] += value
+					} else {
+						requiredChemicals[item.name] = value
+					}
+				}
+
+				hadElement = true
 			}
 		}
 
-		calculateRequiredQuantities(chemicals, requiredChemicals)
-	} else {
-		ore = requiredChemicals["ORE"]
+		level++
 	}
+
+	return requiredChemicals["ORE"]
 }
