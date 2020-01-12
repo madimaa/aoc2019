@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"math"
 	"strconv"
 	"strings"
 
@@ -50,50 +49,17 @@ func main() {
 		chemicals.add(outputName, outputQuantity, ingredients)
 	}
 
-	layers := orderByLevel(chemicals)
+	calculateOreRequirement(chemicals)
 
-	calculateFuel(chemicals, layers)
 	util.Elapsed()
-}
 
-func orderByLevel(chemicals recipes) map[string]int {
-	layers := make(map[string]int)
+	fmt.Println("Part 2")
+	util.Start()
 
-	//0th layer is FUEL
-	layers["FUEL"] = 0
-	actualLayer := make([]string, 1)
-	actualLayer[0] = "FUEL"
+	ore := 1000000000000
+	calculateFuel(chemicals, ore)
 
-	nextLayer := make([]string, 0)
-	level := 1
-	for {
-		inputChemicals := chemicals.product[actualLayer[0]]
-		for _, item := range inputChemicals {
-			if v, ok := layers[item.name]; !ok || level > v {
-				layers[item.name] = level
-			}
-
-			if !util.ContainsStr(nextLayer, item.name) {
-				nextLayer = append(nextLayer, item.name)
-			}
-		}
-
-		//remove the first element
-		actualLayer = actualLayer[1:]
-
-		if len(nextLayer) == 0 && len(actualLayer) == 0 {
-			break
-		}
-
-		if len(actualLayer) == 0 {
-			actualLayer = make([]string, len(nextLayer))
-			copy(actualLayer, nextLayer)
-			nextLayer = make([]string, 0)
-			level++
-		}
-	}
-
-	return layers
+	util.Elapsed()
 }
 
 func splitChemical(input string) (int, string) {
@@ -104,52 +70,102 @@ func splitChemical(input string) (int, string) {
 	return quantity, output[1]
 }
 
-func calculateFuel(chemicals recipes, layers map[string]int) {
-	requiredChemicals := make(map[string]int)
-	inputChemicals := chemicals.product["FUEL"]
-	for _, item := range inputChemicals {
-		requiredChemicals[item.name] = item.quantity
-	}
-
-	ore := calculateRequiredQuantities(chemicals, requiredChemicals, layers)
+func calculateOreRequirement(chemicals recipes) {
+	remainingIngredients := make(map[string]int)
+	ore := calc(chemicals, remainingIngredients, ingredient{"FUEL", 1})
 	fmt.Println(ore)
 }
 
-func calculateRequiredQuantities(chemicals recipes, required map[string]int, layers map[string]int) int {
-	requiredChemicals := make(map[string]int)
+func calculateFuel(chemicals recipes, initialOreQuantity int) {
+	remainingIngredients := make(map[string]int)
+	remainingIngredients["ORE"] = initialOreQuantity
+	producedFuel := 0
 
-	hadElement := true
-	level := 0
-	for hadElement {
-		hadElement = false
-		for input, value := range layers {
-			if value == level && input != "ORE" {
-				requiredQuantity := 1
-				if _, ok := requiredChemicals[input]; ok {
-					requiredQuantity = requiredChemicals[input]
-					if requiredQuantity%chemicals.getQuantity(input) != 0 {
-						requiredQuantity += chemicals.getQuantity(input) - requiredQuantity%chemicals.getQuantity(input)
-					}
-					delete(requiredChemicals, input)
-				}
+	const fuelQuantity = 10000
 
-				ingredients := chemicals.product[input]
-				outputQuantity := chemicals.getQuantity(input)
-				for _, item := range ingredients {
-					value := int(math.Ceil(float64(requiredQuantity)/float64(outputQuantity)) * float64(item.quantity))
-					if _, ok := requiredChemicals[item.name]; ok {
-						requiredChemicals[item.name] += value
-					} else {
-						requiredChemicals[item.name] = value
-					}
-				}
-
-				hadElement = true
-			}
+	for {
+		if !produceFuel(chemicals, remainingIngredients, fuelQuantity) {
+			break
 		}
 
-		level++
+		producedFuel++
 	}
 
-	return requiredChemicals["ORE"]
+	producedFuel *= fuelQuantity
+
+	for {
+		if !produceFuel(chemicals, remainingIngredients, 1) {
+			break
+		}
+
+		producedFuel++
+	}
+
+	fmt.Println("Produced amount of fuel:", producedFuel)
+}
+
+func produceFuel(chemicals recipes, remainingIngredients map[string]int, fuelQuantity int) bool {
+	remainingInput := make(map[string]int)
+	for k, v := range remainingIngredients {
+		remainingInput[k] = v
+	}
+
+	ore := calc(chemicals, remainingIngredients, ingredient{"FUEL", fuelQuantity})
+	if remainingIngredients["ORE"] >= ore {
+		remainingIngredients["ORE"] -= ore
+		return true
+	}
+
+	for k := range remainingIngredients {
+		delete(remainingIngredients, k)
+	}
+
+	for k, v := range remainingInput {
+		remainingIngredients[k] = v
+	}
+
+	return false
+}
+
+func calc(chemicals recipes, remainingIngredients map[string]int, input ingredient) int {
+	requiredQuantity := input.quantity
+	remaining, ok := remainingIngredients[input.name]
+
+	ore := 0
+
+	if ok && remaining >= requiredQuantity {
+		remainingIngredients[input.name] -= requiredQuantity
+		if remainingIngredients[input.name] == 0 {
+			delete(remainingIngredients, input.name)
+		}
+
+		return 0
+	} else if ok {
+		delete(remainingIngredients, input.name)
+		requiredQuantity -= remaining
+	}
+
+	outputQuantity := chemicals.getQuantity(input.name)
+	if requiredQuantity%outputQuantity != 0 {
+		remainder := outputQuantity - requiredQuantity%outputQuantity
+		if _, ok := remainingIngredients[input.name]; ok {
+			remainingIngredients[input.name] += remainder
+		} else {
+			remainingIngredients[input.name] = remainder
+		}
+
+		requiredQuantity += remainder
+	}
+
+	ingredients := chemicals.product[input.name]
+	for _, item := range ingredients {
+		reqQuantity := requiredQuantity / outputQuantity * item.quantity
+		if item.name == "ORE" {
+			ore += reqQuantity
+		} else {
+			ore += calc(chemicals, remainingIngredients, ingredient{item.name, reqQuantity})
+		}
+	}
+
+	return ore
 }
