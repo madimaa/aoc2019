@@ -1,7 +1,6 @@
 package main
 
 import (
-	"container/list"
 	"fmt"
 	"math"
 	"strconv"
@@ -22,10 +21,10 @@ func main() {
 	phases := 100
 
 	output := input
-	for i := 1; i <= phases; i++ {
+	for phase := 1; phase <= phases; phase++ {
 		newInput := ""
-		for _, actualPattern := range patterns {
-			newInput += fft(i, output, actualPattern)
+		for i := 1; i <= len(input); i++ {
+			newInput += fft(phase, output, patterns[i])
 		}
 
 		output = newInput
@@ -33,29 +32,51 @@ func main() {
 
 	fmt.Println(output[0:8])
 	util.Elapsed()
+
+	fmt.Println("Part 2")
+	util.Start()
+
+	input = ""
+	for i := 0; i < 10000; i++ {
+		input += result[0]
+	}
+
+	//offset, err := strconv.Atoi(input[0:7])
+	//util.PanicOnError(err)
+
+	for i := 1; i <= len(input); i++ {
+		calculateNextPattern(pattern, len(input), i)
+		if i%1000 == 0 {
+			fmt.Println(i)
+			util.Elapsed()
+		}
+	}
+
+	//fmt.Println(fft(phases, input, patterns)[offset : offset+8])
+	util.Elapsed()
 }
 
-func calculatePatterns(pattern [4]int, length int) []*list.List {
-	patterns := make([]*list.List, 0)
+func calculatePatterns(pattern [4]int, length int) map[int][]int {
+	patterns := make(map[int][]int)
 
 	for i := 1; i <= length; i++ {
-		patterns = append(patterns, calculateNextPattern(pattern, length, i))
+		patterns[i] = calculateNextPattern(pattern, length, i)
 	}
 
 	return patterns
 }
 
-func fft(phase int, input string, pattern *list.List) string {
+func fft(phase int, input string, pattern []int) string {
 	output := ""
 
 	j := 0
 
 	result := 0
-	for e := pattern.Front(); e != nil; e = e.Next() {
+	for _, value := range pattern {
 		num, err := strconv.Atoi(string(input[j]))
 		util.PanicOnError(err)
 
-		result += num * e.Value.(int)
+		result += num * value
 
 		j++
 	}
@@ -66,21 +87,21 @@ func fft(phase int, input string, pattern *list.List) string {
 	return output
 }
 
-func calculateNextPattern(pattern [4]int, length, serialNumber int) *list.List {
-	actualPattern := list.New()
+func calculateNextPattern(pattern [4]int, length, serialNumber int) []int {
+	actualPattern := make([]int, 0)
 	counter := 0
-	for actualPattern.Len() <= length {
+	for len(actualPattern) <= length {
 		for n := 0; n < serialNumber; n++ {
-			actualPattern.PushBack(pattern[counter%4])
+			actualPattern = append(actualPattern, pattern[counter%4])
 		}
 
 		counter++
 	}
 
-	actualPattern.Remove(actualPattern.Front())
+	actualPattern = actualPattern[1:] //remove first element
 
-	for actualPattern.Len() > length {
-		actualPattern.Remove(actualPattern.Back())
+	for len(actualPattern) > length {
+		actualPattern = actualPattern[:len(actualPattern)-1]
 	}
 
 	return actualPattern
