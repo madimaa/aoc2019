@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"strconv"
+	"strings"
 
 	util "github.com/madimaa/aoc2019/lib"
 )
@@ -12,7 +13,7 @@ func main() {
 	fmt.Println("Part 1")
 	util.Start()
 
-	result := util.OpenFile("sample3.txt")
+	result := util.OpenFile("16.txt")
 	input := result[0]
 	pattern := [4]int{0, 1, 0, -1}
 
@@ -36,23 +37,8 @@ func main() {
 	fmt.Println("Part 2")
 	util.Start()
 
-	input = ""
-	for i := 0; i < 10000; i++ {
-		input += result[0]
-	}
+	fmt.Println(part2(input, phases))
 
-	//offset, err := strconv.Atoi(input[0:7])
-	//util.PanicOnError(err)
-
-	for i := 1; i <= len(input); i++ {
-		calculateNextPattern(pattern, len(input), i)
-		if i%1000 == 0 {
-			fmt.Println(i)
-			util.Elapsed()
-		}
-	}
-
-	//fmt.Println(fft(phases, input, patterns)[offset : offset+8])
 	util.Elapsed()
 }
 
@@ -105,4 +91,41 @@ func calculateNextPattern(pattern [4]int, length, serialNumber int) []int {
 	}
 
 	return actualPattern
+}
+
+func part2(input string, phases int) []int {
+	part2Input := strings.Repeat(input, 10000)
+
+	offset, err := strconv.Atoi(input[0:7])
+	util.PanicOnError(err)
+
+	newInput := make([]int, 0)
+
+	for i := offset; i < len(part2Input); i++ {
+		num, err := strconv.Atoi(string(part2Input[i]))
+		util.PanicOnError(err)
+		newInput = append(newInput, num)
+	}
+
+	for phase := 1; phase <= phases; phase++ {
+		newInput = secondHalf(newInput)
+	}
+
+	return newInput[0:8]
+}
+
+func secondHalf(input []int) []int {
+	output := make([]int, 0)
+	sum := 0
+	for i := len(input) - 1; i >= 0; i-- {
+		num := input[i]
+		sum += num
+		output = append(output, sum%10)
+	}
+
+	for left, right := 0, len(output)-1; left < right; left, right = left+1, right-1 {
+		output[left], output[right] = output[right], output[left]
+	}
+
+	return output
 }
